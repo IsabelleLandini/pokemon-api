@@ -2,10 +2,13 @@ from fastapi import FastAPI
 
 from app.core.database import Base, engine
 from app.models.pokemon import Pokemon
+from app.routes.pokemon_router import router as pokemon_router 
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.include_router(pokemon_router)
 
 @app.get('/')
 def home():
