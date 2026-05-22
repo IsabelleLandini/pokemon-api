@@ -6,7 +6,7 @@ authors = [
     {name = "Isabelle",email = "isa_landini@hotmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "pydantic-settings (>=2.14.1,<3.0.0)",
     "fastapi (>=0.136.1,<0.137.0)",
