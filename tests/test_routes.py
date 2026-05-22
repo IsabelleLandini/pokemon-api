@@ -25,3 +25,11 @@ def test_get_pokemons_with_pagination():
     assert len(data['data']) == 5
     assert data['pagination']['limit'] == 5
     assert data['pagination']['offset'] == 0
+
+def test_get_pokemon_not_found():
+    response = client.get(
+        'pokemons/pokemon-inexistente'
+    )
+
+    assert response.status_code == 404
+    
