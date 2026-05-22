@@ -3,27 +3,44 @@ from app.services.pokemon_service import PokemonService
 from unittest.mock import AsyncMock
 
 @pytest.mark.asyncio
-async def test_get_pokemon():
+async def test_get_pokemons():
     service = PokemonService()
 
-    # Mock da resposta da API
-    service.client.get_pokemon = AsyncMock(return_value={
-        'id': 25,
-        'name': 'pikachu',
-        'height': 4,
-        'weight': 60,
-        'types': [{'type': {'name': 'eletric'}}],
-        'sprites': {
-            'front_default': 'url_front',
-            'back_default': 'url_back'
-        },
-        'stats': [
-            {'stat': {'name': 'speed'}, 'base_stat': 90}    
-        ]    
+    #Mock da lista
+    service.client.get_pokemons = AsyncMock(return_value={
+        'count': 2,
+        'next': 'next_url',
+        'previous': None,
+        'results': [
+            {'name': 'pikachu'},
+            {'name': 'bulbasaur'}
+        ]
     })
 
-    result = await service.get_pokemon('pikachu')
+# Mock dos detalhes
+    async def mock_get_pokemon(name):
+        return {
+            'id': 1 if name == 'pikachu' else 2,
+            'name': name,
+            'height': 10,
+            'weight': 100,
+            'types': [{'type': {'name': 'eletric'}}],
+            'sprites': {
+                'front_default': 'url_front',
+                'back_default': 'url_back'
+        }
+    }
 
-    assert result['name'] == 'pikachu'
-    assert 'eletric' in result['types']
-    
+    service.client.get_pokemon = mock_get_pokemon     
+     
+    result = await service.get_pokemons(limit=2, offset=0)
+
+    # Validações
+    assert len(result['data']) == 2
+    assert result['pagination']['limit'] == 2
+    assert result['pagination']['offset'] == 0
+    assert result['pagination']['total'] == 2
+
+    assert result['data'][0]['name'] == 'pikachu'
+    assert result['data'][1]['name'] == 'bulbasaur'
+
