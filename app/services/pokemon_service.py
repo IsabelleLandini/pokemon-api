@@ -23,3 +23,33 @@ class PokemonService:
                 for stat in data['stats']  
             }    
         }
+    async def get_pokemons(
+        self,
+        limit: int = 20,
+        offset: int = 0
+    ):
+        
+        data = await self.client.get_pokemons(
+            limit=limit,
+            offset=offset
+        )
+
+        pokemons = []
+
+        for pokemon in data['results']:
+            pokemons.append({
+                'name': pokemon['name'],
+                'url': pokemon['url']
+            })
+
+        return {
+            'data': pokemons,
+            'pagination': {
+                'total': data['count'],
+                'limit': limit,
+                'offset': offset,
+                'next': data['next'],
+                'previous': data['previous']
+            }    
+        }
+    

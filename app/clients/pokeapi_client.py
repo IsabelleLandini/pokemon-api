@@ -14,3 +14,21 @@ class PokeAPIClient:
         
         return response.json()
     
+    async def get_pokemons(
+        self, 
+        limit: int = 20,
+        offset: int = 0        
+    ):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f'{self.BASE_URL}/pokemon',
+                params={
+                    'limit': limit,
+                    'offset': offset
+                }
+            )
+
+            response.raise_for_status()
+
+            return response.json()
+        

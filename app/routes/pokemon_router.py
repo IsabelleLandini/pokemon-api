@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.services.pokemon_service import PokemonService
 
-router = APIRouter(prefix='/pokemon', tags=['Pokemon'])
+router = APIRouter(prefix='/pokemons', tags=['Pokemon'])
 
 service = PokemonService()
 
@@ -16,3 +16,13 @@ async def get_pokemon(name:str):
         )
     
     return pokemon
+
+@router.get('')
+async def get_pokemons(
+    limit: int = 20,
+    offset: int = 0    
+):
+    return await service.get_pokemons(
+        limit=limit,
+        offset=offset
+    )
