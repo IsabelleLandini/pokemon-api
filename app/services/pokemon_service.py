@@ -1,5 +1,8 @@
 from app.clients.pokeapi_client import PokeAPIClient
 
+class PokemonNotFound(Exception):
+    pass
+
 class PokemonService:
     def __init__(self):
         self.client = PokeAPIClient()
@@ -17,7 +20,10 @@ class PokemonService:
             'height': data['height'],
             'weight': data['weight'],
             'types': [t['type']['name'] for t in data['types']],
-            'sprite': data['sprites']['front_default'],
+            'sprites': {
+                'front_default': data['sprites']['front_default'],
+                'back_default': data['sprites']['back_default']
+            },
             'stats': {
                 stat['stat']['name']: stat['base_stat']  
                 for stat in data['stats']  
@@ -37,9 +43,7 @@ class PokemonService:
         pokemons = []
 
         for pokemon in data['results']:
-            details = await self.client.get_pokemon(
-            pokemon['name']
-            )
+            details = await self.client.get_pokemon(pokemon['name'])
 
             pokemons.append({
                 'id': details['id'],
@@ -62,11 +66,14 @@ class PokemonService:
                 'total': data['count'],
                 'limit': limit,
                 'offset': offset,
-                'next': data['next'],
-                'previous': data['previous']
-            }    
+                'next': f'/pokemons?limit={limit}&offset={offset + limit}' 
+                if offset + limit < data['count'] else None,
+                'previous': (
+                    f'/pokemons?limit={limit}&offset={offset - limit}'
+                    if offset > 0 else None
+                )
+            }   
         }
     
-class PokemonNotFound(Exception):
-    pass
+
     

@@ -13,7 +13,7 @@ async def get_pokemons(
     return await service.get_pokemons(limit=limit, offset=offset)
 
 @router.get('/pokemons/{name}')
-async def get_pokemons(name: str):
+async def get_pokemon(name: str):
     try:
         return await service.get_pokemon(name)
     except PokemonNotFound:
