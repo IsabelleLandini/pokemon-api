@@ -37,9 +37,23 @@ class PokemonService:
         pokemons = []
 
         for pokemon in data['results']:
+            details = await self.client.get_pokemon(
+            pokemon['name']
+            )
+
             pokemons.append({
+                'id': details['id'],
                 'name': pokemon['name'],
-                'url': pokemon['url']
+                'height': details['height'],
+                'weight': details['weight'],
+                'types': [
+                    t['type']['name']
+                    for t in details['types']
+                ],
+                'sprites': {
+                    'front_default': details['sprites']['front_default'],
+                    'back_default': details['sprites']['back_default']
+                }
             })
 
         return {
