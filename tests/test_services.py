@@ -1,5 +1,5 @@
 import pytest
-from app.services.pokemon_service import PokemonService
+from app.services.pokemon_service import PokemonService, PokemonNotFound
 from unittest.mock import AsyncMock
 
 @pytest.mark.asyncio
@@ -44,3 +44,11 @@ async def test_get_pokemons():
     assert result['data'][0]['name'] == 'pikachu'
     assert result['data'][1]['name'] == 'bulbasaur'
 
+@pytest.mark.asyncio
+async def test_get_pokemon_not_found():
+    service = PokemonService()
+    service.client.get_pokemon = AsyncMock(return_value=None)
+
+    with pytest.raises(PokemonNotFound):
+        await service.get_pokemon('invalid')
+        

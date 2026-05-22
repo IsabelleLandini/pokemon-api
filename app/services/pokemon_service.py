@@ -8,7 +8,7 @@ class PokemonService:
         data = await self.client.get_pokemon(name)
 
         if not data:
-            return None
+            raise PokemonNotFound(f'Pokemon {name} not found.')
         
         # normalização do dados
         return {
@@ -66,4 +66,7 @@ class PokemonService:
                 'previous': data['previous']
             }    
         }
+    
+class PokemonNotFound(Exception):
+    pass
     

@@ -1,28 +1,23 @@
-from fastapi import APIRouter, HTTPException
-from app.services.pokemon_service import PokemonService
+from fastapi import APIRouter, HTTPException, Query
+from app.services.pokemon_service import PokemonService, PokemonNotFound
 
-router = APIRouter(prefix='/pokemons', tags=['Pokemon'])
+router = APIRouter()
 
 service = PokemonService()
 
-@router.get('/{name}')
-async def get_pokemon(name:str):
-    pokemon = await service.get_pokemon(name)
-
-    if not pokemon:
-        raise HTTPException(
-              status_code=404,
-              detail='Pokémon não encontrado'  
-        )
-    
-    return pokemon
-
-@router.get('')
+@router.get('/pokemons')
 async def get_pokemons(
-    limit: int = 20,
-    offset: int = 0    
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
 ):
-    return await service.get_pokemons(
-        limit=limit,
-        offset=offset
-    )
+    return await service.get_pokemons(limit=limit, offset=offset)
+
+@router.get('/pokemons/{name}')
+async def get_pokemons(name: str):
+    try:
+        return await service.get_pokemon(name)
+    except PokemonNotFound:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pokemon '{name}' not found"
+        )
