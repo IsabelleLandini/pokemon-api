@@ -2,6 +2,7 @@ from app.clients.pokeapi_client import PokeAPIClient
 from app.core.redis import redis_client
 from redis.exceptions import ConnectionError
 import json
+import asyncio
 
 class PokemonNotFound(Exception):
     pass
@@ -69,10 +70,16 @@ class PokemonService:
             offset=offset
         )
 
+        tasks = [
+            self.client.get_pokemon(pokemon['name'])
+            for pokemon in data['results']    
+        ]
+
+        results = await asyncio.gather(*tasks)
+
         pokemons = []
 
-        for pokemon in data['results']:
-            details = await self.client.get_pokemon(pokemon['name'])
+        for pokemon, details in zip(data['results'], results):
 
             pokemons.append({
                 'id': details['id'],
@@ -102,7 +109,7 @@ class PokemonService:
                 ),
 
                 'previous': (
-                    f'/pokemons?limit={limit}&offset={offset - limit}'
+                    f'/pokemons?limit={limit}&offset={max(offset - limit, 0)}'
                     if offset > 0 
                     else None
                 )
