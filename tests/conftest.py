@@ -1,0 +1,54 @@
+import pytest
+import pytest_asyncio
+from unittest.mock import AsyncMock
+from httpx import AsyncClient, ASGITransport
+
+from app.main import app
+from app.services.pokemon_service import PokemonService
+
+# HTTP Client 
+@pytest_asyncio.fixture(scope='function')
+async def client():
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+
+# Mock Data
+@pytest.fixture
+def pokemon_list_response():
+    return {
+        'count': 2,
+        'next': 'next_url',
+        'previous': None,
+        'results': [
+            {'name': 'pikachu'},
+            {'name': 'bulbasaur'}
+        ]    
+    }
+
+@pytest.fixture
+def pokemon_detail_factory():
+    def _factory(name: str):
+        return {
+            'id': 1 if name == 'pikachu' else 2,
+            'name': name,
+            'height': 10,
+            'weight': 100,
+            'types': [{'type': {'name': 'electric'}}],
+            'sprites': {
+                'front_default': 'url_front',
+                'back_default': 'url_back'
+            }
+        }
+    return _factory
+
+# Service
+@pytest.fixture
+def pokemon_service(pokemon_list_response, pokemon_detail_factory):
+    svc = PokemonService()
+
+    svc.client.get_pokemons = AsyncMock(return_value=pokemon_list_response)
+    svc.client.get_pokemon = AsyncMock(side_effect=pokemon_detail_factory)
+
+    return svc

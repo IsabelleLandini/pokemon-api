@@ -1,39 +1,9 @@
 import pytest
-from app.services.pokemon_service import PokemonService, PokemonNotFound
-from unittest.mock import AsyncMock
+from app.services.pokemon_service import PokemonNotFound
 
 @pytest.mark.asyncio
-async def test_get_pokemons():
-    service = PokemonService()
-
-    #Mock da lista
-    service.client.get_pokemons = AsyncMock(return_value={
-        'count': 2,
-        'next': 'next_url',
-        'previous': None,
-        'results': [
-            {'name': 'pikachu'},
-            {'name': 'bulbasaur'}
-        ]
-    })
-
-# Mock dos detalhes
-    async def mock_get_pokemon(name):
-        return {
-            'id': 1 if name == 'pikachu' else 2,
-            'name': name,
-            'height': 10,
-            'weight': 100,
-            'types': [{'type': {'name': 'eletric'}}],
-            'sprites': {
-                'front_default': 'url_front',
-                'back_default': 'url_back'
-        }
-    }
-
-    service.client.get_pokemon = mock_get_pokemon     
-     
-    result = await service.get_pokemons(limit=2, offset=0)
+async def test_get_pokemons(pokemon_service):
+    result = await pokemon_service.get_pokemons(limit=2, offset=0)
 
     # Validações
     assert len(result['data']) == 2
@@ -44,11 +14,14 @@ async def test_get_pokemons():
     assert result['data'][0]['name'] == 'pikachu'
     assert result['data'][1]['name'] == 'bulbasaur'
 
+    pokemon_service.client.get_pokemons.assert_called_once_with(limit=2, offset=0)
+
 @pytest.mark.asyncio
-async def test_get_pokemon_not_found():
-    service = PokemonService()
-    service.client.get_pokemon = AsyncMock(return_value=None)
+async def test_get_pokemon_not_found(pokemon_service):
+    pokemon_service.client.get_pokemon.return_value =None
 
     with pytest.raises(PokemonNotFound):
-        await service.get_pokemon('invalid')
-        
+        await pokemon_service.get_pokemon('invalid')
+    
+    pokemon_service.client.get_pokemon.assert_called_once_with('invalid')
+    
