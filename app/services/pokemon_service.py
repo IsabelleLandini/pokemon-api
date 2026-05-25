@@ -1,4 +1,6 @@
 from app.clients.pokeapi_client import PokeAPIClient
+from app.core.redis import redis_client
+import json
 
 class PokemonNotFound(Exception):
     pass
@@ -8,18 +10,28 @@ class PokemonService:
         self.client = PokeAPIClient()
 
     async def get_pokemon(self, name:str):
+        cache_key = f'pokemon:{name}'
+
+        cached_pokemon = await redis_client.get(cache_key)
+
+        if cached_pokemon:
+            return json.loads(cached_pokemon)
+        
         data = await self.client.get_pokemon(name)
 
         if not data:
             raise PokemonNotFound(f'Pokemon {name} not found.')
         
         # normalização do dados
-        return {
+        pokemon_data = {
             'id': data['id'],
             'name': data['name'],
             'height': data['height'],
             'weight': data['weight'],
-            'types': [t['type']['name'] for t in data['types']],
+            'types': [
+                t['type']['name'] 
+                for t in data['types']
+            ],
             'sprites': {
                 'front_default': data['sprites']['front_default'],
                 'back_default': data['sprites']['back_default']
@@ -29,6 +41,15 @@ class PokemonService:
                 for stat in data['stats']  
             }    
         }
+
+        await redis_client.set(
+            cache_key,
+            json.dumps(pokemon_data),
+            ex=3600
+        )
+        
+        return pokemon_data
+    
     async def get_pokemons(
         self,
         limit: int = 20,
@@ -66,11 +87,16 @@ class PokemonService:
                 'total': data['count'],
                 'limit': limit,
                 'offset': offset,
-                'next': f'/pokemons?limit={limit}&offset={offset + limit}' 
-                if offset + limit < data['count'] else None,
+                'next': (
+                    f'/pokemons?limit={limit}&offset={offset + limit}' 
+                    if offset + limit < data['count'] 
+                    else None
+                ),
+
                 'previous': (
                     f'/pokemons?limit={limit}&offset={offset - limit}'
-                    if offset > 0 else None
+                    if offset > 0 
+                    else None
                 )
             }   
         }
