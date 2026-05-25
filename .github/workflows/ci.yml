@@ -10,12 +10,8 @@ on:
       - main
 
 jobs:
-  tests:
+  lint:
     runs-on: ubuntu-latest
-
-    env:
-        DATABASE_URL: sqlite:///./test.db 
-        POKEAPI_URL: https://pokeapi.co/api/v2
 
     steps:
       - name: Checkout do código
@@ -29,15 +25,63 @@ jobs:
       - name: Instalar Poetry
         run: pip install poetry
 
+      - name: Cache Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
       - name: Instalar dependências
         run: poetry install --no-interaction --no-root
 
       - name: Rodar lint
         run: poetry run ruff check .
 
+  tests:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: sqlite:///./test.db 
+      POKEAPI_URL: https://pokeapi.co/api/v2
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Poetry
+        run: pip install poetry
+
+      - name: Cache Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Instalar dependências
+        run: poetry install --no-interaction --no-root
+
       - name: Rodar testes com coverage
-        run: poetry run pytest --cov=app
+        run: poetry run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+        
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, tests]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
       - name: Build Docker
         run: docker build -t pokemon-api .
+
+      - name: Validar container
+        run: docker run --rm pokemon-api python -c "print('container OK')"
+
+
+
         
