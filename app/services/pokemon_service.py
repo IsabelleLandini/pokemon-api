@@ -1,5 +1,6 @@
 from app.clients.pokeapi_client import PokeAPIClient
 from app.core.redis import redis_client
+from redis.exceptions import ConnectionError
 import json
 
 class PokemonNotFound(Exception):
@@ -12,11 +13,15 @@ class PokemonService:
     async def get_pokemon(self, name:str):
         cache_key = f'pokemon:{name}'
 
-        cached_pokemon = await redis_client.get(cache_key)
+        try: 
+            cached_pokemon = await redis_client.get(cache_key)
 
-        if cached_pokemon:
-            return json.loads(cached_pokemon)
-        
+            if cached_pokemon:
+                return json.loads(cached_pokemon)
+            
+        except ConnectionError:
+            pass
+            
         data = await self.client.get_pokemon(name)
 
         if not data:
@@ -42,12 +47,15 @@ class PokemonService:
             }    
         }
 
-        await redis_client.set(
-            cache_key,
-            json.dumps(pokemon_data),
-            ex=3600
-        )
-        
+        try: 
+            await redis_client.set(
+                cache_key,
+                json.dumps(pokemon_data),
+                ex=3600
+            )
+        except ConnectionError:
+            pass
+
         return pokemon_data
     
     async def get_pokemons(
