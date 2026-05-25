@@ -62,3 +62,9 @@ def pokemon_service(pokemon_list_response, pokemon_detail_factory):
     svc.client.get_pokemon = AsyncMock(side_effect=pokemon_detail_factory)
 
     return svc
+
+@pytest.fixture
+def service_with_empty_response(pokemon_service):
+    pokemon_service.client.get_pokemon= AsyncMock(return_value=None)
+   
+    return pokemon_service
