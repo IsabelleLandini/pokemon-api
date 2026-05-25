@@ -10,7 +10,7 @@ async def test_get_pokemons(client):
 
     assert 'data' in data
     assert 'pagination' in data
-    assert isinstance(data['data'][0], list)
+    assert isinstance(data['data'][0], dict)
     assert len(data['data']) > 0
     assert 'name' in data['data'][0]
 

@@ -39,8 +39,18 @@ def pokemon_detail_factory():
             'sprites': {
                 'front_default': 'url_front',
                 'back_default': 'url_back'
+            },
+            'stats': [
+            {
+                'stat': {'name': 'speed'},
+                'base_stat': 90
+            },
+            {
+                'stat': {'name': 'attack'},
+                'base_stat': 55
             }
-        }
+        ]
+    }
     return _factory
 
 # Service
