@@ -1,35 +1,35 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - main
-    
-    pull_request: 
-        branches:
-            - main
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
 
 jobs:
-    tests:
-        runs-on: ubuntu-latest
+  tests:
+    runs-on: ubuntu-latest
 
     steps:
-        - name: Checkout do código
-          uses: actions/checkout@v4
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-        - name: Instalar Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-        - name: Instalar Poetry
-           run: pip install poetry 
+      - name: Instalar Poetry
+        run: pip install poetry
 
-        - name: Instalar dependências
-          run: poetry install --no-root
+      - name: Instalar dependências
+        run: poetry install --no-root
 
-        - name: Rodar testes
-          run: poetry run pytest
+      - name: Rodar testes
+        run: poetry run pytest
 
-        - name: Build Docker
-          run: docker build -t pokemon-api .
+      - name: Build Docker
+        run: docker build -t pokemon-api .
