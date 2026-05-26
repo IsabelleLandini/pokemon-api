@@ -1,6 +1,9 @@
 from app.clients.pokeapi_client import PokeAPIClient
 from app.core.redis import redis_client
-from redis.exceptions import ConnectionError
+from app.utils.pagination import build_pagination
+
+from redis.exceptions import ConnectionError as RedisConnectionError
+
 import json
 import asyncio
 
@@ -54,7 +57,7 @@ class PokemonService:
                 json.dumps(pokemon_data),
                 ex=3600
             )
-        except ConnectionError:
+        except RedisConnectionError:
             pass
 
         return pokemon_data
@@ -75,46 +78,41 @@ class PokemonService:
             for pokemon in data['results']    
         ]
 
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         pokemons = []
 
         for pokemon, details in zip(data['results'], results):
+
+            if isinstance(details, Exception):
+                pass
+
+            types = [t['type']['name'] for t in details['types']]
+
+            sprites = details['sprites']
 
             pokemons.append({
                 'id': details['id'],
                 'name': pokemon['name'],
                 'height': details['height'],
                 'weight': details['weight'],
-                'types': [
-                    t['type']['name']
-                    for t in details['types']
-                ],
+                'types': types,
                 'sprites': {
-                    'front_default': details['sprites']['front_default'],
-                    'back_default': details['sprites']['back_default']
+                    'front_default': sprites['front_default'],
+                    'back_default': sprites['back_default']
                 }
             })
 
         return {
             'data': pokemons,
-            'pagination': {
-                'total': data['count'],
-                'limit': limit,
-                'offset': offset,
-                'next': (
-                    f'/pokemons?limit={limit}&offset={offset + limit}' 
-                    if offset + limit < data['count'] 
-                    else None
-                ),
-
-                'previous': (
-                    f'/pokemons?limit={limit}&offset={max(offset - limit, 0)}'
-                    if offset > 0 
-                    else None
-                )
-            }   
+            'pagination': build_pagination(
+                total = data['count'],
+                limit = limit,
+                offset = offset
+            )
         }
+
+    
     
 
     
