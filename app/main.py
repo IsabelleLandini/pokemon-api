@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 
 from app.core.database import Base, engine
-from app.routes.pokemon_router import router as pokemon_router 
+from app.core.exceptions import pokemon_not_found_handler
+
+from app.routes.pokemon_router import router 
+
+from app.services.pokemon_service import PokemonNotFound 
 
 Base.metadata.create_all(bind=engine)
 
@@ -10,7 +14,12 @@ app = FastAPI(
     version='1.0.0'
 )
 
-app.include_router(pokemon_router)
+app.include_router(router)
+
+app.add_exception_handler(
+    PokemonNotFound,
+    pokemon_not_found_handler
+)
 
 @app.get('/')
 def home():
