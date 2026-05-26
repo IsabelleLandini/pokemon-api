@@ -72,3 +72,12 @@ def service_with_empty_response(pokemon_service):
     pokemon_service.client.get_pokemon= AsyncMock(return_value=None)
    
     return pokemon_service
+
+@pytest.fixture(autouse=True)
+def mock_redis(monkeypatch):
+    mock = AsyncMock()
+
+    mock.get.return_value = None
+    mock.set.return_value = True
+
+    monkeypatch.setattr('app.services.pokemon_service.redis_client', mock)
