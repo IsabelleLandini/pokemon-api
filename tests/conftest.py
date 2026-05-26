@@ -1,3 +1,7 @@
+import os
+
+os.environ['API_KEY'] = 'pokemon123'
+
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock

@@ -1,6 +1,6 @@
 import pytest
 
-HEADERS = {'X-API-Key': 'minha-chave-secreta'}
+HEADERS = {'X-API-Key': 'pokemon123'}
 
 @pytest.mark.asyncio
 async def test_get_pokemons(client):
@@ -72,7 +72,7 @@ async def test_get_pokemons_without_api_key(client):
 async def test_get_pokemons_with_invalid_api_key(client):
     response = await client.get(
         '/pokemons/',
-        headers={'X-API-Key': 'invalid-key'}
+        headers={'X-API-Key': 'wrong-key'}
     )
 
     assert response.status_code == 401
