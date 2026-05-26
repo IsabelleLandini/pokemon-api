@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, Depends
 
 from app.core.security import verify_api_key
 from app.schemas.pokemon import PokemonListResponse, PokemonResponse
-from app.services.pokemon_service import PokemonService, PokemonNotFound
+from app.services.pokemon_service import PokemonService
 
 
 router = APIRouter(
