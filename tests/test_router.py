@@ -1,8 +1,13 @@
 import pytest
 
+HEADERS = {'X-API-Key': 'minha-chave-secreta'}
+
 @pytest.mark.asyncio
 async def test_get_pokemons(client):
-    response = await client.get('/pokemons?limit=10&offset=0')
+    response = await client.get(
+        '/pokemons/?limit=10&offset=0',
+        headers=HEADERS
+    )
 
     assert response.status_code == 200
 
@@ -16,7 +21,10 @@ async def test_get_pokemons(client):
 
 @pytest.mark.asyncio
 async def test_get_pokemons_with_pagination(client):
-    response = await client.get('/pokemons?limit=5&offset=0')
+    response = await client.get(
+        '/pokemons/?limit=5&offset=0',
+        headers=HEADERS
+    )
 
     assert response.status_code == 200
 
@@ -29,7 +37,10 @@ async def test_get_pokemons_with_pagination(client):
 
 @pytest.mark.asyncio
 async def test_get_pokemon(client):
-    response = await client.get('/pokemons/pikachu')
+    response = await client.get(
+        '/pokemons/pikachu',
+        headers=HEADERS
+    )
 
     assert response.status_code == 200
 
@@ -41,11 +52,28 @@ async def test_get_pokemon(client):
 
 @pytest.mark.asyncio
 async def test_get_pokemon_not_found(client):
-    response = await client.get('/pokemons/pokemon-inexistente')
+    response = await client.get(
+        '/pokemons/pokemon-inexistente',
+        headers=HEADERS
+    )
 
     assert response.status_code == 404
 
     data = response.json()
     assert 'detail' in data
 
+@pytest.mark.asyncio
+async def test_get_pokemons_without_api_key(client):
+    response = await client.get('/pokemons/')
+
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_get_pokemons_with_invalid_api_key(client):
+    response = await client.get(
+        '/pokemons/',
+        headers={'X-API-Key': 'invalid-key'}
+    )
+
+    assert response.status_code == 401
     
