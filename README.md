@@ -37,19 +37,19 @@ https://pokemon-api-u9so.onrender.com
 
 ## API Access
 
-This API uses API Key authentication.
+Esta API utiliza autenticação via API Key.
 
-Use the following header to access protected endpoints:
+Utilize o seguinte header para acessar os endpoints protegidos:
 
 ```bash
 x-api-key: pokemon123
 ```
 
-## Available Endpoints
+## Endpoints disponíveis
 
-- `/` → API status
-- `/docs` → Swagger documentation
-- `/pokemons/` → Pokémon list
+- `/` → Status da API
+- `/docs` → Documentação Swagger
+- `/pokemons/` → Lista de Pokémon
 
 ---
 
