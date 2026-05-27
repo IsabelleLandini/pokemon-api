@@ -1,6 +1,12 @@
 # Pokémon API - Projeto Final Backend
 
-API RESTful desenvolvida em Python com foco em boas práticas de backend, consumo de API externa, paginação, testes automatizados, Docker e CI/CD.
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-green)
+![Docker](https://img.shields.io/badge/Docker-Containerization-blue)
+![Pytest](https://img.shields.io/badge/Tests-Pytest-yellow)
+![CI/CD](https://img.shields.io/badge/CI/CD-GitHub_Actions-black)
+
+API RESTful desenvolvida com Python e FastAPI, integrada à PokeAPI, com paginação, autenticação via API Key, cache com Redis, testes automatizados, Docker, CI/CD e deploy no Render.
 
 ## Objetivo do Projeto
 
@@ -25,8 +31,29 @@ O projeto contempla:
 * Tratamento global de exceções
 
 ---
+## Deploy
 
-# Tecnologias Utilizadas
+https://pokemon-api-u9so.onrender.com
+
+## API Access
+
+This API uses API Key authentication.
+
+Use the following header to access protected endpoints:
+
+```bash
+x-api-key: pokemon123
+```
+
+## Available Endpoints
+
+- `/` → API status
+- `/docs` → Swagger documentation
+- `/pokemons/` → Pokémon list
+
+---
+
+# Stack e Tecnologias
 
 * Python 3.12
 * FastAPI
@@ -234,7 +261,7 @@ Crie um arquivo `.env` na raiz do projeto:
 DATABASE_URL=sqlite:///./pokemon.db
 POKEAPI_URL=https://pokeapi.co/api/v2
 REDIS_URL=redis://redis:6379
-API_KEY=123456
+API_KEY=pokemon123
 ```
 
 ---
@@ -323,7 +350,7 @@ A API requer autenticação via `x-api-key`.
 
 ---
 
-# 👩‍💻 Desenvolvido por
+# 👩‍💻 Desenvolvedora
 
 Isabelle Landini
 

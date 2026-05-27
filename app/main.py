@@ -27,4 +27,9 @@ app.add_exception_handler(
 
 @app.get('/')
 def home():
-    return {'status': 'Pokemon API'}
+    return {
+        'project': 'Pokemon API', 
+        'status': 'online',
+        'docs': '/docs',
+        'demo_api_key': 'pokemon123'
+    }
