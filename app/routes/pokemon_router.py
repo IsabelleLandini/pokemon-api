@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import verify_api_key
 
-from app.models.pokemon import Pokemon
-
 from app.schemas.pokemon_schema import PokemonListResponse, PokemonResponse, PokemonCreate
 
 from app.services.pokemon_service import PokemonService
+from app.services.pokemon_db_service import PokemonDBService
 
 
 router = APIRouter(
@@ -18,73 +17,24 @@ router = APIRouter(
 
 service = PokemonService()
 
+# Create
 @router.post('/')
 def create_pokemon(
     pokemon: PokemonCreate,
     db: Session = Depends(get_db)    
 ):
-    db_pokemon = Pokemon(
-        pokemon_id=pokemon.pokemon_id,
-        name=pokemon.name,
-        height=pokemon.height,
-        weight=pokemon.weight,
-        types=pokemon.types,
-        front_sprite=pokemon.front_sprite,
-        back_sprite=pokemon.back_sprite
-    )
+    data = pokemon.model_dump()
 
-    db.add(db_pokemon)
-    db.commit()
-    db.refresh(db_pokemon)
+    return PokemonDBService.create(db, data)
 
-    return db_pokemon
-
+# Read (DB)
 @router.get('/db')
 def get_saved_pokemons(
     db: Session = Depends(get_db)
 ):
-    pokemons = db.query(Pokemon).all()
+    return PokemonDBService.get_all(db)
 
-    return pokemons
-
-@router.delete('/{pokemon_id}')
-def delete_pokemon(
-    pokemon_id: int,
-    db: Session = Depends(get_db)
-):
-    pokemon = db.query(Pokemon).filter(Pokemon.pokemon_id == pokemon_id).first()
-
-    if not pokemon:
-        return {'message': 'Pokemon not found'}
-    
-    db.delete(pokemon)
-    db.commit()
-
-    return {'message': 'Pokemon deleted successfully'}
-
-@router.put('/{pokemon_id}')
-def update_pokemon(
-    pokemon_id: int,
-    pokemon_data: PokemonCreate,
-    db: Session = Depends(get_db)
-):
-    pokemon = db.query(Pokemon).filter(Pokemon.pokemon_id == pokemon_id).first()
-
-    if not pokemon:
-        return {'message': 'Pokemon not found'}
-    
-    pokemon.name = pokemon_data.name
-    pokemon.height = pokemon_data.height
-    pokemon.weight = pokemon_data.weight
-    pokemon.types = pokemon_data.types
-    pokemon.front_sprite = pokemon_data.front_sprite
-    pokemon.back_sprite = pokemon_data.back_sprite
-
-    db.commit()
-    db.refresh(pokemon)
-
-    return pokemon
-
+# Read (API externa)
 @router.get(
         '/',
         response_model=PokemonListResponse
@@ -101,7 +51,47 @@ async def get_pokemons(
 @router.get(
         '/{name}',
         response_model=PokemonResponse
-    )
+)
 async def get_pokemon(name: str):
     return await service.get_pokemon(name)
        
+# Update
+@router.put('/{pokemon_id}')
+def update_pokemon(
+    pokemon_id: int,
+    pokemon_data: PokemonCreate,
+    db: Session = Depends(get_db)
+):
+    pokemon = PokemonDBService.get_by_id(db, pokemon_id)
+
+    if not pokemon:
+        raise HTTPException(
+            status_code=404,
+            detail="Pokemon not found"
+        )
+
+    return PokemonDBService.update(
+        db, 
+        pokemon, 
+        pokemon_data.model_dump()
+    )
+
+# Delete
+@router.delete('/{pokemon_id}')
+def delete_pokemon(
+    pokemon_id: int,
+    db: Session = Depends(get_db)
+):
+    pokemon = PokemonDBService.get_by_id(db, pokemon_id)
+
+    if not pokemon:
+        raise HTTPException(
+            status_code=404,
+            detail="Pokemon not found"
+        )
+    
+    PokemonDBService.delete(db, pokemon)
+
+    return {"message": "Pokemon deleted successfully"}
+
+
