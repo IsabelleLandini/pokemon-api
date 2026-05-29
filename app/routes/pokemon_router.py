@@ -47,6 +47,21 @@ def get_saved_pokemons(
 
     return pokemons
 
+@router.delete('/{pokemon_id}')
+def delete_pokemon(
+    pokemon_id: int,
+    db: Session = Depends(get_db)
+):
+    pokemon = db.query(Pokemon).filter(Pokemon.pokemon_id == pokemon_id).first()
+
+    if not pokemon:
+        return {'message': 'Pokemon not found'}
+    
+    db.delete(pokemon)
+    db.commit()
+
+    return {'message': 'Pokemon deleted successfully'}
+
 @router.get(
         '/',
         response_model=PokemonListResponse
