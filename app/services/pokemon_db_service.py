@@ -1,15 +1,25 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
+
 from app.models.pokemon import Pokemon
 
 class PokemonDBService:
     @staticmethod
     def create(db: Session, data):
-        pokemon = Pokemon(**data)
-        db.add(pokemon)
-        db.commit()
-        db.refresh(pokemon)
-        return pokemon
-    
+        try:
+            pokemon = Pokemon(**data)
+            db.add(pokemon)
+            db.commit()
+            db.refresh(pokemon)
+            return pokemon
+        
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail='Pokemon alredy exists'
+            )
     @staticmethod
     def get_all(db: Session):
         return db.query(Pokemon).all()
@@ -22,13 +32,27 @@ class PokemonDBService:
     
     @staticmethod
     def update(db: Session, pokemon: Pokemon, data: dict):
-        for key, value in data.items():
-            setattr(pokemon, key, value)
-        db.commit()
-        db.refresh(pokemon)
-        return pokemon
+        try:
+            for key, value in data.items():
+                setattr(pokemon, key, value)
+            db.commit()
+            db.refresh(pokemon)
+            return pokemon
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail='Error updating pokemon'
+            )
 
     @staticmethod
     def delete(db: Session, pokemon):
-        db.delete(pokemon)
-        db.commit()
+        try:
+            db.delete(pokemon)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail='Error deleting pokemon'
+            )

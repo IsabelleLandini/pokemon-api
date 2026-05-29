@@ -1,13 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.core.database import Base, engine
-from app.core.exceptions import pokemon_not_found_handler
+from app.core.exceptions import PokemonNotFound
+from app.core.exceptions_handlers import pokemon_not_found_handler, http_exception_handler
 from app.core.logging_middleware import LoggingMiddleWare
 
 from app.routes.pokemon_router import router 
-
-from app.services.pokemon_service import PokemonNotFound 
-
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,10 +18,9 @@ app.add_middleware(LoggingMiddleWare)
 
 app.include_router(router)
 
-app.add_exception_handler(
-    PokemonNotFound,
-    pokemon_not_found_handler
-)
+# Handlers globais
+app.add_exception_handler(PokemonNotFound, pokemon_not_found_handler)
+app.add_exception_handler(HTTPException,http_exception_handler)
 
 @app.get('/')
 def home():

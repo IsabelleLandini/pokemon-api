@@ -9,6 +9,12 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.services.pokemon_service import PokemonService
+from app.core.database import Base, engine
+
+@pytest.fixture(autouse=True)
+def clean_db():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 # HTTP Client 
 @pytest_asyncio.fixture(scope='function')

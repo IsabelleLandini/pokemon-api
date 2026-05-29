@@ -1,18 +1,17 @@
+import json
+import asyncio
+
 from httpx import HTTPStatusError, RequestError, TimeoutException
+
 from fastapi import HTTPException
+
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 from app.clients.pokeapi_client import PokeAPIClient
 from app.core.redis import redis_client
 from app.core.logger import logger
+from app.core.exceptions import PokemonNotFound
 from app.utils.pagination import build_pagination
-
-from redis.exceptions import ConnectionError as RedisConnectionError
-
-import json
-import asyncio
-
-class PokemonNotFound(Exception):
-    pass
 
 class PokemonService:
     def __init__(self):
@@ -27,15 +26,15 @@ class PokemonService:
             if cached_pokemon:
                 return json.loads(cached_pokemon)
             
-        except ConnectionError:
-            pass
+        except RedisConnectionError:
+            logger.warning('Redis unavailable durin cache get')
 
         try:  
             data = await self.client.get_pokemon(name)
         except HTTPStatusError:
             raise HTTPException(
                 status_code=502,
-                detail='PokeAPI returned an invalid response'
+                detail='PokeAPI returned invalid response'
             )
         
         except TimeoutException:
@@ -53,7 +52,7 @@ class PokemonService:
         if not data:
             raise PokemonNotFound(f'Pokemon {name} not found.')
         
-        # normalização do dados
+        # Normalização do dados
         pokemon_data = {
             'id': data['id'],
             'name': data['name'],
@@ -71,7 +70,7 @@ class PokemonService:
                 for stat in data['stats']  
             }    
         }
-
+        # Cache
         try: 
             await redis_client.set(
                 cache_key,
@@ -79,7 +78,7 @@ class PokemonService:
                 ex=3600
             )
         except RedisConnectionError:
-            logger.warning(f'Redis unavailable during Pokemon cache access')
+            logger.warning('Redis unavailable during cache set')
 
         return pokemon_data
     
