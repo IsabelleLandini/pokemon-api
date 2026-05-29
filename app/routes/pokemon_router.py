@@ -26,7 +26,8 @@ def create_pokemon(
     db_pokemon = Pokemon(
         pokemon_id=pokemon.pokemon_id,
         name=pokemon.name,
-        height=pokemon.weight,
+        height=pokemon.height,
+        weight=pokemon.weight,
         types=pokemon.types,
         front_sprite=pokemon.front_sprite,
         back_sprite=pokemon.back_sprite
@@ -37,6 +38,14 @@ def create_pokemon(
     db.refresh(db_pokemon)
 
     return db_pokemon
+
+@router.get('/db')
+def get_saved_pokemons(
+    db: Session = Depends(get_db)
+):
+    pokemons = db.query(Pokemon).all()
+
+    return pokemons
 
 @router.get(
         '/',
