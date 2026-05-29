@@ -62,6 +62,29 @@ def delete_pokemon(
 
     return {'message': 'Pokemon deleted successfully'}
 
+@router.put('/{pokemon_id}')
+def update_pokemon(
+    pokemon_id: int,
+    pokemon_data: PokemonCreate,
+    db: Session = Depends(get_db)
+):
+    pokemon = db.query(Pokemon).filter(Pokemon.pokemon_id == pokemon_id).first()
+
+    if not pokemon:
+        return {'message': 'Pokemon not found'}
+    
+    pokemon.name = pokemon_data.name
+    pokemon.height = pokemon_data.height
+    pokemon.weight = pokemon_data.weight
+    pokemon.types = pokemon_data.types
+    pokemon.front_sprite = pokemon_data.front_sprite
+    pokemon.back_sprite = pokemon_data.back_sprite
+
+    db.commit()
+    db.refresh(pokemon)
+
+    return pokemon
+
 @router.get(
         '/',
         response_model=PokemonListResponse
