@@ -37,10 +37,9 @@ class PokemonService:
             'name': data['name'],
             'height': data['height'],
             'weight': data['weight'],
-            'types': [
-                t['type']['name'] 
-                for t in data['types']
-            ],
+            'types': ','.join(
+                t['type']['name'] for t in data['types']
+            ),
             'sprites': {
                 'front_default': data['sprites']['front_default'],
                 'back_default': data['sprites']['back_default']
@@ -85,7 +84,7 @@ class PokemonService:
         for pokemon, details in zip(data['results'], results):
 
             if isinstance(details, Exception):
-                pass
+                continue
 
             types = [t['type']['name'] for t in details['types']]
 
@@ -96,7 +95,7 @@ class PokemonService:
                 'name': pokemon['name'],
                 'height': details['height'],
                 'weight': details['weight'],
-                'types': types,
+                'types': ','.join(types),
                 'sprites': {
                     'front_default': sprites['front_default'],
                     'back_default': sprites['back_default']
