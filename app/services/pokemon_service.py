@@ -1,5 +1,9 @@
+from httpx import HTTPStatusError, RequestError, TimeoutException
+from fastapi import HTTPException
+
 from app.clients.pokeapi_client import PokeAPIClient
 from app.core.redis import redis_client
+from app.core.logger import logger
 from app.utils.pagination import build_pagination
 
 from redis.exceptions import ConnectionError as RedisConnectionError
@@ -25,8 +29,26 @@ class PokemonService:
             
         except ConnectionError:
             pass
-            
-        data = await self.client.get_pokemon(name)
+
+        try:  
+            data = await self.client.get_pokemon(name)
+        except HTTPStatusError:
+            raise HTTPException(
+                status_code=502,
+                detail='PokeAPI returned an invalid response'
+            )
+        
+        except TimeoutException:
+            raise HTTPException(
+                status_code=504,
+                detail='PokeAPI timeout'
+            )
+
+        except RequestError:
+            raise HTTPException(
+                status_code=503,
+                detail='PokeAPI unavailable'
+            )
 
         if not data:
             raise PokemonNotFound(f'Pokemon {name} not found.')
@@ -57,7 +79,7 @@ class PokemonService:
                 ex=3600
             )
         except RedisConnectionError:
-            pass
+            logger.warning(f'Redis unavailable during Pokemon cache access')
 
         return pokemon_data
     
@@ -83,7 +105,7 @@ class PokemonService:
 
         for pokemon, details in zip(data['results'], results):
 
-            if isinstance(details, Exception):
+            if isinstance(details, Exception) or details is None:
                 continue
 
             types = [t['type']['name'] for t in details['types']]
